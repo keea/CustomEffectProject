@@ -77,6 +77,7 @@ public class ParticlePlayer : EditorWindow{
 
     ParticleControl particleControl;
     TimeControl timeControl;
+    public List<bool> playlist;
 
     [MenuItem("K_Particle/Player")]
     static void open()
@@ -88,18 +89,27 @@ public class ParticlePlayer : EditorWindow{
     void OnEnable()
     {
         timeControl = new TimeControl();
-        timeControl.SetMinMaxTime(0, 10);
-        timeControl.speed = 0.1f;
+        timeControl.SetMinMaxTime(0, 9);
+        timeControl.speed = 1f;
 
         GameObject particleManager = Resources.Load("Prefabs/K_ParticleManager/ParticleManager") as GameObject;
         particleControl = particleManager.GetComponent<ParticleControl>();
         particleControl.init();
+
+        playlist = new List<bool>();
+        for(int i=0; i<particleControl.particles.Count(); i++)
+        {
+            playlist.Add(false);
+        }
     }
 
     void OnGUI()
     {
         if (particleControl == null)
             return;
+
+
+
 
         //플레이버튼
         var buttonText = timeControl.IsPlaying ? "Pause" : "Play";
@@ -111,28 +121,64 @@ public class ParticlePlayer : EditorWindow{
                 timeControl.Play();
         }
 
+
+        EditorGUILayout.Space();
+
+        //커스텀 타임 라인
         timeControl.currentTime = GUILayout.HorizontalSlider(timeControl.getCurrentTime(),
             timeControl.minTime, timeControl.maxTime, "box", "box", GUILayout.Height(40), GUILayout.ExpandWidth(true));
+
+        var timeLength = timeControl.maxTime - timeControl.minTime; //시간의 길이
+        var gridline = timeLength * 2; // 0.5눈금 간격
+        var lastRect = GUILayoutUtility.GetLastRect();
+
+        var sliderRect = new Rect(lastRect); //타임 라인 slider의 Rect
+
+        for(int i=1; i<gridline; i++)
+        {
+            var x = (sliderRect.width / gridline) * i;
+
+            Handles.DrawLine(
+                new Vector2(sliderRect.x + x, sliderRect.y),
+                new Vector2(sliderRect.x + x, sliderRect.y + sliderRect.height));
+
+            Handles.Label(
+                new Vector2(sliderRect.x + x - 10, sliderRect.y - 12),
+                (timeLength / gridline * i).ToString("0.0"));
+        }
 
         //GUI갱신
         if (timeControl.IsPlaying)
             Repaint();
 
-        if (particleControl.arr_name.Count() > 0)
+        //널이 아닐 경우
+        if (particleControl.particles.Count() > 0)
         {
-            //널이 아닐 경우
-            for (int i = 0; i < particleControl.amount; i++)
+            int max_row = particleControl.amount / 3;
+
+            for(int i=0; i<=max_row; i++)
             {
-                particleControl.playlist[i] = 
-                    GUILayout.Toggle(particleControl.playlist[i], particleControl.arr_name[i],
-                    EditorStyles.miniButton,
-                    GUILayout.MaxWidth(position.width / 3));
-                if (particleControl.playlist[i])
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    particleControl.particles[i].Simulate(timeControl.getCurrentTime());
+                    for (int j=0; j<3; j++)
+                    {
+                        int idx = (i * 3) + j;
+                        if (idx > particleControl.amount-1)
+                            break;
+
+                       
+                        playlist[idx] =
+                        GUILayout.Toggle(playlist[idx], particleControl.particles[idx].gameObject.name,
+                        EditorStyles.miniButton,
+                        GUILayout.MaxWidth(position.width / 3));
+                        if (playlist[idx])
+                        {
+                            particleControl.particles[idx].Simulate(timeControl.getCurrentTime());
+                        }
+                        else
+                            particleControl.particles[idx].Simulate(0);
+                    }
                 }
-                else
-                    particleControl.particles[i].Simulate(0);
             }
         }
 

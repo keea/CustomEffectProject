@@ -51,6 +51,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334e8e31f5441ca4795af02c8e219344, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  amount: 0
-  arr_name: []
-  playlist: 
+  amount: 3
+  arr_name:
+  - temp3
+  - temp1
+  - temp2
+  playlist: 000000
+  particles:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
