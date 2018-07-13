@@ -73,17 +73,20 @@ public void SetMinMaxTime(float minTime, float maxTime)
     }
 }
 
-public class ParticlePlayer : EditorWindow{
+public class ParticlePlayer : EditorWindow
+{
 
     ParticleControl particleControl;
     TimeControl timeControl;
+    public List<TimeControl> timeControls;
     public List<bool> playlist;
+    Vector2 scrollPos;
+    bool syncTime;
 
     [MenuItem("K_Particle/Player")]
     static void open()
     {
-      
-       GetWindow<ParticlePlayer>();
+        GetWindow<ParticlePlayer>();
     }
 
     void OnEnable()
@@ -92,14 +95,21 @@ public class ParticlePlayer : EditorWindow{
         timeControl.SetMinMaxTime(0, 9);
         timeControl.speed = 1f;
 
+
         GameObject particleManager = Resources.Load("Prefabs/K_ParticleManager/ParticleManager") as GameObject;
         particleControl = particleManager.GetComponent<ParticleControl>();
         particleControl.init();
 
         playlist = new List<bool>();
-        for(int i=0; i<particleControl.particles.Count(); i++)
+        timeControls = new List<TimeControl>();
+        syncTime = false;
+        for (int i = 0; i < particleControl.particles.Count(); i++)
         {
             playlist.Add(false);
+            TimeControl temp = new TimeControl();
+            temp.SetMinMaxTime(0, 9);
+            temp.speed = 1f;
+            timeControls.Add(temp);
         }
     }
 
@@ -108,33 +118,140 @@ public class ParticlePlayer : EditorWindow{
         if (particleControl == null)
             return;
 
+        Repaint();
+       
+        EditorGUILayout.Space();
+        EditorGUILayout.Space();
 
+        //타임라인
+        CreateTimeLine(timeControl, 40);
 
+        using (new EditorGUILayout.HorizontalScope(GUILayout.MaxWidth(position.width / 3)))
+        {
+            var text = timeControl.IsPlaying ? "Pause" : "Play";
+            if (GUILayout.Button(text, EditorStyles.miniButton, GUILayout.MaxWidth(position.width / 8)))
+            {
+                if (timeControl.IsPlaying)
+                {
+                    timeControl.Pause();
+                    //파티클 재생을 멈춘다.
+                    Stop();
+                }
+                else
+                {
+                    timeControl.Play();
+                    //파티클 재생한다.
+                    SyncAllPlay();
+                }
+            }
 
-        //플레이버튼
-        var buttonText = timeControl.IsPlaying ? "Pause" : "Play";
-        if (GUILayout.Button(buttonText))
+            syncTime = EditorGUILayout.ToggleLeft("Sync", syncTime);
+        }
+       
+        //플레이시간 보기
+        ShowPlayTime(timeControl);
+
+        using (var h = new EditorGUILayout.HorizontalScope())
+        {
+            using (var scrollView = new EditorGUILayout.ScrollViewScope(scrollPos))
+            {
+                scrollPos = scrollView.scrollPosition;
+
+                for (int i = 0; i < particleControl.particles.Count(); i++)
+                {
+                    playlist[i] = EditorGUILayout.ToggleLeft(
+                        particleControl.particles[i].gameObject.name,
+                        playlist[i]);
+
+                    if (playlist[i])
+                    {
+                        if (syncTime)
+                        {
+                            if (timeControl.IsPlaying)
+                                particleControl.particles[i].Simulate(timeControl.getCurrentTime());
+                            else
+                                particleControl.particles[i].Stop();
+                        }
+                        else
+                        {
+                            EditorGUILayout.Space();
+                            CreateTimeLine(timeControls[i], 20);
+
+                            CommandBtn(timeControls[i]);
+                            ShowPlayTime(timeControls[i]);
+
+                            //if (timeControls[i].IsPlaying)
+                                particleControl.particles[i].Simulate(timeControls[i].getCurrentTime());
+
+                           // else
+                               // particleControl.particles[i].Stop();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //파티클 싱크재생 - 전부
+    void SyncAllPlay()
+    {
+        for(int i=0; i<particleControl.particles.Count(); i++)
+        {
+            if (playlist[i])
+                timeControls[i].Play();
+        }
+    }
+
+    //파티클 재생 정지
+    void Stop()
+    {
+        for (int i = 0; i < particleControl.particles.Count(); i++)
+            timeControls[i].Pause();
+    }
+
+    void CreateTimeLine(TimeControl timeControl, int height)
+    {   
+        //커스텀 타임 라인
+        timeControl.currentTime = GUILayout.HorizontalSlider(timeControl.getCurrentTime(),
+            timeControl.minTime, timeControl.maxTime, "box", "box", GUILayout.Height(height), GUILayout.ExpandWidth(true));
+
+        DrawTicks();
+    }
+
+    //버튼 동작
+    void CommandBtn(TimeControl timeControl)
+    {
+        var text = timeControl.IsPlaying ? "Pause" : "Play";
+        if (GUILayout.Button(text, EditorStyles.miniButton, GUILayout.MaxWidth(position.width / 8))) 
         {
             if (timeControl.IsPlaying)
                 timeControl.Pause();
             else
                 timeControl.Play();
         }
+    }
 
+    //시간 위치 확인
+    void ShowPlayTime(TimeControl timeControl)
+    {
+        var lastRect = GUILayoutUtility.GetLastRect();
+        float time = 
+        EditorGUI.FloatField(new Rect((position.width / 2) - 40,
+            lastRect.y, 80, EditorGUIUtility.singleLineHeight), timeControl.currentTime);
 
-        EditorGUILayout.Space();
+        timeControl.currentTime = time;
+    }
 
-        //커스텀 타임 라인
-        timeControl.currentTime = GUILayout.HorizontalSlider(timeControl.getCurrentTime(),
-            timeControl.minTime, timeControl.maxTime, "box", "box", GUILayout.Height(40), GUILayout.ExpandWidth(true));
-
+    //눈금 만들기
+    void DrawTicks()
+    {
         var timeLength = timeControl.maxTime - timeControl.minTime; //시간의 길이
         var gridline = timeLength * 2; // 0.5눈금 간격
         var lastRect = GUILayoutUtility.GetLastRect();
 
         var sliderRect = new Rect(lastRect); //타임 라인 slider의 Rect
 
-        for(int i=1; i<gridline; i++)
+        for (int i = 1; i < gridline; i++)
         {
             var x = (sliderRect.width / gridline) * i;
 
@@ -145,58 +262,6 @@ public class ParticlePlayer : EditorWindow{
             Handles.Label(
                 new Vector2(sliderRect.x + x - 10, sliderRect.y - 12),
                 (timeLength / gridline * i).ToString("0.0"));
-        }
-
-        //GUI갱신
-        if (timeControl.IsPlaying)
-            Repaint();
-
-        //널이 아닐 경우
-        if (particleControl.particles.Count() > 0)
-        {
-            int max_row = particleControl.amount / 3;
-
-            for(int i=0; i<=max_row; i++)
-            {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    for (int j=0; j<3; j++)
-                    {
-                        int idx = (i * 3) + j;
-                        if (idx > particleControl.amount-1)
-                            break;
-
-                       
-                        playlist[idx] =
-                        GUILayout.Toggle(playlist[idx], particleControl.particles[idx].gameObject.name,
-                        EditorStyles.miniButton,
-                        GUILayout.MaxWidth(position.width / 3));
-                        if (playlist[idx])
-                        {
-                            particleControl.particles[idx].Simulate(timeControl.getCurrentTime());
-                        }
-                        else
-                            particleControl.particles[idx].Simulate(0);
-                    }
-                }
-            }
-        }
-
-        //화살표 키로 시간이동
-        if(Event.current.type == EventType.KeyDown)
-        {
-            //재생 중이면 일시정지함.
-            timeControl.Pause();
-
-            if (Event.current.keyCode == KeyCode.RightArrow)
-                timeControl.currentTime += 0.01f;
-
-            if (Event.current.keyCode == KeyCode.LeftArrow)
-                timeControl.currentTime -= 0.01f;
-
-            GUI.changed = true;
-            Event.current.Use();
-            Repaint();
         }
     }
 }
