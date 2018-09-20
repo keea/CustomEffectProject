@@ -331,7 +331,7 @@ ParticleSystem:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 526361559}
   serializedVersion: 5
-  lengthInSec: 5
+  lengthInSec: 7
   simulationSpeed: 1
   stopAction: 0
   looping: 0
@@ -4907,7 +4907,8 @@ Transform:
 --- !u!1 &800293786
 GameObject:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
+  m_PrefabParentObject: {fileID: 1073833738123126, guid: 2affb2eb1af0b954883c84af7c7010a9,
+    type: 2}
   m_PrefabInternal: {fileID: 0}
   serializedVersion: 5
   m_Component:
@@ -4925,7 +4926,8 @@ GameObject:
 ParticleSystemRenderer:
   serializedVersion: 5
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
+  m_PrefabParentObject: {fileID: 199181554121281080, guid: 2affb2eb1af0b954883c84af7c7010a9,
+    type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 800293786}
   m_Enabled: 1
@@ -4980,7 +4982,8 @@ ParticleSystemRenderer:
 --- !u!198 &800293788
 ParticleSystem:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
+  m_PrefabParentObject: {fileID: 198912501709961126, guid: 2affb2eb1af0b954883c84af7c7010a9,
+    type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 800293786}
   serializedVersion: 5
@@ -9547,7 +9550,8 @@ ParticleSystem:
 --- !u!4 &800293789
 Transform:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
+  m_PrefabParentObject: {fileID: 4401329040247786, guid: 2affb2eb1af0b954883c84af7c7010a9,
+    type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 800293786}
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
@@ -9637,7 +9641,7 @@ ParticleSystem:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1132093334}
   serializedVersion: 5
-  lengthInSec: 5
+  lengthInSec: 8
   simulationSpeed: 1
   stopAction: 0
   looping: 0
@@ -14290,7 +14294,7 @@ ParticleSystem:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1595077520}
   serializedVersion: 5
-  lengthInSec: 5
+  lengthInSec: 6
   simulationSpeed: 1
   stopAction: 0
   looping: 0
@@ -18943,7 +18947,7 @@ ParticleSystem:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1878289135}
   serializedVersion: 5
-  lengthInSec: 5
+  lengthInSec: 9
   simulationSpeed: 1
   stopAction: 0
   looping: 0

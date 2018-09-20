@@ -2,8 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_EDITOR 
+using UnityEditor;
+#endif
+
 public class ParticleControl : MonoBehaviour {
-    public  int amount;
+    public int amount;
+    public float maxTime = 0;
     public List<ParticleSystem> particles;
 
     public ParticleControl()
@@ -15,6 +20,7 @@ public class ParticleControl : MonoBehaviour {
     public void init()
     {
         amount = 0;
+        maxTime = 0;
         particles.Clear();
 
         //씬 내의 ParticleSystem를 모두 얻어오기
@@ -23,6 +29,10 @@ public class ParticleControl : MonoBehaviour {
         {
             if (IsRoot(particleSystem))
             {
+                var so = new SerializedObject(particleSystem);
+                float tempTime = so.FindProperty("lengthInSec").floatValue + so.FindProperty("InitialModule.startLifetime.scalar").floatValue;
+                if (tempTime > maxTime)
+                    maxTime = tempTime;
                 particles.Add(particleSystem);
                 amount++;
             }

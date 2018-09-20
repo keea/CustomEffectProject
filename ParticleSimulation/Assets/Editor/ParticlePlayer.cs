@@ -24,14 +24,13 @@ public class ParticlePlayer : EditorWindow
 
     void OnEnable()
     {
-        timeControl = new TimeControl();
-        timeControl.SetMinMaxTime(0, 9);
-        timeControl.speed = 1f;
-
-
         GameObject particleManager = Resources.Load("Prefabs/K_ParticleManager/ParticleManager") as GameObject;
         particleControl = particleManager.GetComponent<ParticleControl>();
         particleControl.init();
+
+        timeControl = new TimeControl();
+        timeControl.SetMinMaxTime(0, particleControl.maxTime);
+        timeControl.speed = 1f;
 
         playlist = new List<bool>();
         timeControls = new List<TimeControl>();
@@ -39,8 +38,14 @@ public class ParticlePlayer : EditorWindow
         for (int i = 0; i < particleControl.particles.Count(); i++)
         {
             playlist.Add(false);
+
+            var so = new SerializedObject(particleControl.particles[i]);
+           // Debug.Log(so.FindProperty("lengthInSec").floatValue); //Duration 값 가져오기
+           // Debug.Log(so.FindProperty("InitialModule.startLifetime.scalar").floatValue); //start Lifetime 값 가져오기
+            float maxTime = so.FindProperty("lengthInSec").floatValue + so.FindProperty("InitialModule.startLifetime.scalar").floatValue;
+
             TimeControl temp = new TimeControl();
-            temp.SetMinMaxTime(0, 9);
+            temp.SetMinMaxTime(0, maxTime);
             temp.speed = 1f;
             timeControls.Add(temp);
         }
@@ -148,7 +153,7 @@ public class ParticlePlayer : EditorWindow
         timeControl.currentTime = GUILayout.HorizontalSlider(timeControl.getCurrentTime(),
             timeControl.minTime, timeControl.maxTime, "box", "box", GUILayout.Height(height), GUILayout.ExpandWidth(true));
 
-        DrawTicks();
+        DrawTicks(timeControl);
     }
 
     //버튼 동작
@@ -176,7 +181,7 @@ public class ParticlePlayer : EditorWindow
     }
 
     //눈금 만들기
-    void DrawTicks()
+    void DrawTicks(TimeControl timeControl)
     {
         var timeLength = timeControl.maxTime - timeControl.minTime; //시간의 길이
         var gridline = timeLength * 2; // 0.5눈금 간격
